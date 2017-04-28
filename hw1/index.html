@@ -1,0 +1,755 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"  
+  "http://www.w3.org/TR/html4/loose.dtd">  
+<html > 
+<head><title>CSE 163: Project 1</title> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"> 
+<meta name="generator" content="TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/)"> 
+<meta name="originator" content="TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/)"> 
+<!-- html --> 
+<meta name="src" content="main.tex"> 
+<meta name="date" content="2017-04-28 11:55:00"> 
+<link rel="stylesheet" type="text/css" href="main.css"> 
+<style>
+.img_grp
+{
+    text-align:left;
+}
+.img_holder,.subfigure
+{
+    display:inline-block;
+}
+</style>
+</head><body 
+>
+   <div class="maketitle">
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+
+<h2 class="titleHead">CSE 163: Project 1</h2>
+ <div class="author" ><span 
+class="ptmr7t-x-x-120">Alexandr Kuznetsov,     Zhengqin Li</span></div><br />
+<div class="date" ><span 
+class="ptmr7t-x-x-120">April 28, 2017</span></div>
+   </div>
+   <h3 class="likesectionHead"><a 
+ id="x1-1000"></a>Part 1: Basic Operations</h3>
+<!--l. 25--><p class="noindent" >In this section, we apply some basic operations such as brightness, contrast, saturation, gamma and crop. In order to do that
+more easily, we have modified some classes to make operation easier. First, we created IPixel and FPixel classes similar to Pixel
+class. IPixel allows us to support negative and <span 
+class="cmmi-10">&#x003E; </span><span 
+class="cmr-10">255 </span>subpixels. FPixel stores float pixels. This is useful, because it not only
+supports negative values as IPixel, but also has more bits per pixel and allows operations like <span 
+class="pcrr7t-">pow</span>. Moreover, we support
+conversion between Fpixel, IPixel and Pixel. When we convert from float to int or char, we round the result. We made Image
+to be a subclass of Buffer<span 
+class="cmmi-10">&#x003C;</span>Pixel<span 
+class="cmmi-10">&#x003E;</span>. Template class Buffer is a container type of different types of pixels, and
+supports operations such 2d indexing like (<span 
+class="pcrr7t-">buffer[coord2di(63, 57)]</span>) and iteration through pixels
+like <span 
+class="pcrr7t-">for(auto &amp;pixel : buffer)</span><span 
+class="cmsy-10">{}</span><span 
+class="pcrr7t-">;</span>. Because Buffer is a template class, we were able to reuse it for
+filters. The buffer automatically check if a coordinate is valid. Classes size_2di and coord_2di help to accomplish
+that.
+<!--l. 27--><p class="indent" >   Brightness, contrast, saturation are basic pixel level operations. The parameter of 1 indicate that image doesn&#8217;t changed for
+all of them. For brightness we just iterate over all pixels and multiply them by the parameter. Because it&#8217;s a simple operations,
+we manipulated pixels as uchar, skipping conversion to int. For contrast, we had to find the grayscale average first. Because
+multiplication is distributive, we calculated gray scale value for each pixel, while adding to an accumulator. We had to calculate
+contrast using floating pixels because (Original Pixel - Grayscale Pixel) can be negative. Saturation is handled in similar way,
+but instead of calculating grayscale average of the image, we use grayscale of the pixel. For gamma change, we
+simply iterate over all pixel. There, for each pixel, we convert them into float pixel and raise to the power of
+1/gamma.
+<!--l. 29--><p class="indent" >   However, because we are performing linear operations in non linear space, numerical errors occur. So, we first need to
+convert image to linear space, do the transformation, and convert back to original color space. However, because we are using
+only 8 bits per subpixel, this leads to banding. Because the solution is using simpler method, we decided to also not do
+conversion to linear space and use the same method as the solution.
+<!--l. 31--><p class="indent" >   For the crop operation, we create a new image and then iterate over all of the new pixels. We find the corresponding
+coordinate in the old image and if the coordinate is in range of old image size, we copy the pixel, otherwise, we set pixel to
+black. That way, we can crop image of any size, even if it&#8217;s larger than original. Solution crashes during cropping a bigger
+image, so it&#8217;s not shown in comparisons.
+<!--l. 33--><p class="indent" >   The results and 10 times the difference with solutions are shown in Figure <a 
+href="#x1-10011">1<!--tex4ht:ref: part1_all --></a>.
+                                                                                          
+                                                                                          
+<!--l. 36--><p class="indent" >   <a 
+ id="x1-10011"></a><hr class="float"><div class="float" 
+>
+<H4>Brightness</H4><div class='img_grp'>-brightness 0<br><div class='img_holder'><div><img src='imgs/our_-brightness_0_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-brightness_0_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-brightness_0_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-brightness 1<br><div class='img_holder'><div><img src='imgs/our_-brightness_1_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-brightness_1_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-brightness_1_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-brightness 1.7<br><div class='img_holder'><div><img src='imgs/our_-brightness_1.7_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-brightness_1.7_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-brightness_1.7_flower.png'><br>Diff 10X</div></div></div><br><H4>Contrast</H4><div class='img_grp'>-contrast 0<br><div class='img_holder'><div><img src='imgs/our_-contrast_0_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-contrast_0_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-contrast_0_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-contrast 1<br><div class='img_holder'><div><img src='imgs/our_-contrast_1_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-contrast_1_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-contrast_1_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-contrast 1.7<br><div class='img_holder'><div><img src='imgs/our_-contrast_1.7_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-contrast_1.7_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-contrast_1.7_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-contrast -1<br><div class='img_holder'><div><img src='imgs/our_-contrast_-1_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-contrast_-1_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-contrast_-1_flower.png'><br>Diff 10X</div></div></div><br><H4>Saturation</H4><div class='img_grp'>-saturation 0<br><div class='img_holder'><div><img src='imgs/our_-saturation_0_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-saturation_0_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-saturation_0_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-saturation 1<br><div class='img_holder'><div><img src='imgs/our_-saturation_1_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-saturation_1_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-saturation_1_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-saturation 1.7<br><div class='img_holder'><div><img src='imgs/our_-saturation_1.7_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-saturation_1.7_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-saturation_1.7_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-saturation -1<br><div class='img_holder'><div><img src='imgs/our_-saturation_-1_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-saturation_-1_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-saturation_-1_flower.png'><br>Diff 10X</div></div></div><br><H4>Gamma</H4><div class='img_grp'>-gamma 1<br><div class='img_holder'><div><img src='imgs/our_-gamma_1_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-gamma_1_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-gamma_1_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-gamma 1.7<br><div class='img_holder'><div><img src='imgs/our_-gamma_1.7_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-gamma_1.7_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-gamma_1.7_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-gamma 2<br><div class='img_holder'><div><img src='imgs/our_-gamma_2_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-gamma_2_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-gamma_2_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-gamma 2.2<br><div class='img_holder'><div><img src='imgs/our_-gamma_2.2_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-gamma_2.2_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-gamma_2.2_flower.png'><br>Diff 10X</div></div></div><br><H4>Crop</H4><div class='img_grp'>-crop 10 20 80 40<br><div class='img_holder'><div><img src='imgs/our_-crop_10_20_80_40_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-crop_10_20_80_40_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-crop_10_20_80_40_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-crop 40 0 90 40<br><div class='img_holder'><div><img src='imgs/our_-crop_40_0_90_40_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-crop_40_0_90_40_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-crop_40_0_90_40_flower.png'><br>Diff 10X</div></div>                                                                     
+                                                                                          
+ <div class="caption" 
+><span class="id">Figure&#x00A0;1: </span><span  
+class="content">Image basic operations. From top to the bottom are the results for brightness, contrast, saturation, gamma
+and crop. We show our results, the solution results and the amplified 10 times difference between them.</span></div><!--tex4ht:label?: x1-10011 -->
+                                                                                          
+                                                                                          
+   </div><hr class="endfloat" />
+   <h3 class="likesectionHead"><a 
+ id="x1-2000"></a>Part 2: Quantization and Dithering</h3>
+<!--l. 44--><p class="noindent" >In this part, we try three methods to quantize images with a smaller number of bits: linear quantization, random dithering and
+Floyd-Steinberg dithering. The results are summarized in Figure <a 
+href="#x1-20172">2<!--tex4ht:ref: part2_fig --></a>. The number of bits we use to quantize the color value are
+shown below the images. The first row shows the results by linear quantizing the color value. We can observe that when the
+number of bits is smaller than 3, there will be very strong color changes. A large area of images are saturated due to the
+quantization (See the area near the nose of mandrill). However, when the number of bits is larger than 4, we can hardly observe
+any differences between the quantized images and the original image. The results of random dithering are shown in the second
+row. Compared with linear quantization, randomly add some noise to the quantization process can alleviate the saturation
+effect. However, this will bring salt-and-pepper noise which deteriorates the image quality. Among all three
+methods, the Floyd-Steinberg dithering method can generate images with the most satisfactory visual quality.
+Even when the number of bits is extremely low (1 bit for each color channel), the color of the images still looks
+similar to the original one. In Floyd-Steinberg dithering method, the quantization error of each pixel are diffused
+and accumulated on the neighboring pixels. When implementing the algorithm, we only diffuse the error to the
+valid pixels, i.e. for the boundary pixels the quantization error that will be diffused out of the images are simply
+ignored.
+<!--l. 46--><p class="indent" >   The quantitative comparison of the three methods are summarized in Table <a 
+href="#x1-20011">1<!--tex4ht:ref: part2_tab --></a>. We use average L1 distance as the error
+metric. From Table <a 
+href="#x1-20011">1<!--tex4ht:ref: part2_tab --></a>, we can see that random dithering will usually lead to higher error compared with the other two methods.
+Floyd-Steinberg dithering method has very high error when the number of bits is extremely small (1 bits). In other cases, it
+performs similar to linear quantization in terms of L1 error metric.
+   <div class="table">
+                                                                                          
+                                                                                          
+<!--l. 48--><p class="indent" >   <a 
+ id="x1-20011"></a><hr class="float"><div class="float" 
+>
+                                                                                          
+                                                                                          
+<div class="tabular"> <table id="TBL-2" class="tabular" 
+cellspacing="0" cellpadding="0" rules="groups" 
+><colgroup id="TBL-2-1g"><col 
+id="TBL-2-1"></colgroup><colgroup id="TBL-2-2g"><col 
+id="TBL-2-2"><col 
+id="TBL-2-3"><col 
+id="TBL-2-4"><col 
+id="TBL-2-5"><col 
+id="TBL-2-6"><col 
+id="TBL-2-7"><col 
+id="TBL-2-8"></colgroup><tr 
+class="hline"><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td></tr><tr  
+ style="vertical-align:baseline;" id="TBL-2-1-"><td  style="white-space:nowrap; text-align:left;" id="TBL-2-1-1"  
+class="td11"> Method                              </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-1-2"  
+class="td11"> 1 bit        </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-1-3"  
+class="td11"> 2 bits       </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-1-4"  
+class="td11"> 3 bits       </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-1-5"  
+class="td11"> 4 bits     </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-1-6"  
+class="td11"> 5 bits     </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-1-7"  
+class="td11"> 6 bits     </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-1-8"  
+class="td11"> 7 bits     </td></tr><tr 
+class="hline"><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td></tr><tr  
+ style="vertical-align:baseline;" id="TBL-2-2-"><td  style="white-space:nowrap; text-align:left;" id="TBL-2-2-1"  
+class="td11"> Linear quantize </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-2-2"  
+class="td11"> 79.0591 </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-2-3"  
+class="td11"> 24.1873 </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-2-4"  
+class="td11"> 10.4305 </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-2-5"  
+class="td11"> 4.9099 </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-2-6"  
+class="td11"> 2.3556 </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-2-7"  
+class="td11"> 1.1340 </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-2-8"  
+class="td11"> 0.4961</td>
+</tr><tr  
+ style="vertical-align:baseline;" id="TBL-2-3-"><td  style="white-space:nowrap; text-align:left;" id="TBL-2-3-1"  
+class="td11"> Random dithering               </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-3-2"  
+class="td11"> 86.6173  </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-3-3"  
+class="td11"> 30.2672  </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-3-4"  
+class="td11"> 13.3037  </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-3-5"  
+class="td11"> 6.3057  </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-3-6"  
+class="td11"> 3.0944  </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-3-7"  
+class="td11"> 1.5600  </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-3-8"  
+class="td11"> 0.7483  </td>
+</tr><tr  
+ style="vertical-align:baseline;" id="TBL-2-4-"><td  style="white-space:nowrap; text-align:left;" id="TBL-2-4-1"  
+class="td11"> Floyd-Steinberg dithering  </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-4-2"  
+class="td11"> 97.8837  </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-4-3"  
+class="td11"> 23.9510  </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-4-4"  
+class="td11"> 9.8035    </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-4-5"  
+class="td11"> 4.6609  </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-4-6"  
+class="td11"> 2.2842  </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-4-7"  
+class="td11"> 1.1489  </td><td  style="white-space:nowrap; text-align:left;" id="TBL-2-4-8"  
+class="td11"> 0.6071  </td>
+</tr><tr 
+class="hline"><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td><td><hr></td></tr><tr  
+ style="vertical-align:baseline;" id="TBL-2-5-"><td  style="white-space:nowrap; text-align:left;" id="TBL-2-5-1"  
+class="td11">                   </td></tr></table></div>
+<br /><div class="caption" 
+><span class="id">Table&#x00A0;1: </span><span  
+class="content">The quantitative comparison of different quantization methods.</span></div><!--tex4ht:label?: x1-20011 -->
+                                                                                          
+                                                                                          
+   </div><hr class="endfloat" />
+   </div>
+                                                                                          
+                                                                                          
+<!--l. 64--><p class="indent" >   <a 
+ id="x1-20172"></a><hr class="float"><div class="float" 
+>
+                                                                                          
+     <div class="img_grp">                                                                                      
+<a 
+ id="x1-2002r1"></a>
+
+<div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_quantize_1.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(a)</span>
+<span 
+class="ptmr7t-x-x-80">Linear</span>
+<span 
+class="ptmr7t-x-x-80">1bit</span></div> </td></tr></table></div> <a 
+ id="x1-2003r2"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_quantize_2.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(b)</span>
+<span 
+class="ptmr7t-x-x-80">Linear</span>
+<span 
+class="ptmr7t-x-x-80">2bits</span></div></td></tr></table></div> <a 
+ id="x1-2004r3"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_quantize_3.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(c)</span>
+<span 
+class="ptmr7t-x-x-80">Linear</span>
+<span 
+class="ptmr7t-x-x-80">3bits</span></div></td></tr></table></div> <a 
+ id="x1-2005r4"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_quantize_5.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(d)</span>
+<span 
+class="ptmr7t-x-x-80">Linear</span>
+<span 
+class="ptmr7t-x-x-80">5bits</span></div></td></tr></table></div> <a 
+ id="x1-2006r5"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_quantize_8.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(e)</span>
+<span 
+class="ptmr7t-x-x-80">Linear</span>
+<span 
+class="ptmr7t-x-x-80">8bits</span></div></td></tr></table></div>
+
+</div> <div class="img_grp"> <a 
+ id="x1-2007r6"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_randomDither_1.png" alt="PIC"  
+><hr>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(f)</span>
+<span 
+class="ptmr7t-x-x-80">Random</span>
+<span 
+class="ptmr7t-x-x-80">1bit</span></div>  </td></tr></table></div> <a 
+ id="x1-2008r7"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_randomDither_2.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(g)</span>
+<span 
+class="ptmr7t-x-x-80">Random</span>
+<span 
+class="ptmr7t-x-x-80">2bits</span></div></td></tr></table></div> <a 
+ id="x1-2009r8"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_randomDither_3.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(h)</span>
+<span 
+class="ptmr7t-x-x-80">Random</span>
+<span 
+class="ptmr7t-x-x-80">3bits</span></div></td></tr></table></div> <a 
+ id="x1-2010r9"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_randomDither_5.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(i)</span>
+<span 
+class="ptmr7t-x-x-80">Random</span>
+<span 
+class="ptmr7t-x-x-80">5bits</span></div></td></tr></table></div> <a 
+ id="x1-2011r10"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_randomDither_8.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(j)</span>
+<span 
+class="ptmr7t-x-x-80">Random</span>
+<span 
+class="ptmr7t-x-x-80">8bits</span></div></td></tr></table></div> 
+
+</div> <div class="img_grp"> 
+<a 
+ id="x1-2012r11"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_FloydSteinbergDither_1.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(k)</span>
+<span 
+class="ptmr7t-x-x-80">Floyd</span>
+<span 
+class="ptmr7t-x-x-80">1bit</span></div>  </td></tr></table></div> <a 
+ id="x1-2013r12"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_FloydSteinbergDither_2.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(l)</span>
+<span 
+class="ptmr7t-x-x-80">Floyd</span>
+<span 
+class="ptmr7t-x-x-80">2bits</span></div></td></tr></table></div> <a 
+ id="x1-2014r13"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_FloydSteinbergDither_3.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(m)</span>
+<span 
+class="ptmr7t-x-x-80">Floyd</span>
+<span 
+class="ptmr7t-x-x-80">3bits</span></div></td></tr></table></div> <a 
+ id="x1-2015r14"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_FloydSteinbergDither_5.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(n)</span>
+<span 
+class="ptmr7t-x-x-80">Floyd</span>
+<span 
+class="ptmr7t-x-x-80">5bits</span></div></td></tr></table></div> <a 
+ id="x1-2016r15"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part2/mandrill_FloydSteinbergDither_8.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(o)</span>
+<span 
+class="ptmr7t-x-x-80">Floyd</span>
+<span 
+class="ptmr7t-x-x-80">8bits</span></div></td></tr></table></div></div>
+ <div class="caption" 
+><span class="id">Figure&#x00A0;2: </span><span  
+class="content">Image quantization and dithering. From top to the bottom are the results of linear quantization, random
+dithering and Floyd-Steinberg dithering. The number of bits for quantization is shown below the image. </span></div><!--tex4ht:label?: x1-20172 -->
+                                                                                          
+                                                                                          
+   </div><hr class="endfloat" />
+   <h3 class="likesectionHead"><a 
+ id="x1-3000"></a>Part 3: Basic Convolution and Edge Detection</h3>
+<!--l. 85--><p class="noindent" >Filtering is implemented by convolving filter buffer with image. Blur and Sharpen filters first generate integer buffers. For Blur
+filter, we fist compute the smallest possible element of the kernel. Then we create integer buffer by calculating 2d Gaussian
+function and dividing it by smallest element. Then, for each pixel in the image, we calculate the sum of product between
+kernel. Then we normalize the sum by dividing it by sum of the kernel and the image. That way can handle
+edges and corners. Also, we have to do arithmetics in integers instead of uchars, because pixels can become
+negative (sharpen) or beyond the range of chars. Sharp filter is implemented is similar way, but the kernel is already
+known.
+<!--l. 87--><p class="indent" >   The edge detector is similar to blur and edge filters, but we compute convolution for each pixel for both, horizontal and
+vertical filters together without saving the result. We calculate L2 norm from the grayscale of those two pixels and compare it to
+threshold.
+<!--l. 89--><p class="indent" >   The results and 10 times the difference with solutions are shown in Figure <a 
+href="#x1-30013">3<!--tex4ht:ref: part3_all --></a>.
+                                                                                          
+                                                                                          
+<!--l. 92--><p class="indent" >   <a 
+ id="x1-30013"></a><hr class="float"><div class="float" 
+>
+<H4>Blur</H4><div class='img_grp'>-blur 3<br><div class='img_holder'><div><img src='imgs/our_-blur_3_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-blur_3_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-blur_3_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-blur 5<br><div class='img_holder'><div><img src='imgs/our_-blur_5_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-blur_5_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-blur_5_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-blur 7<br><div class='img_holder'><div><img src='imgs/our_-blur_7_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-blur_7_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-blur_7_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-blur 11<br><div class='img_holder'><div><img src='imgs/our_-blur_11_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-blur_11_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-blur_11_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-blur 13<br><div class='img_holder'><div><img src='imgs/our_-blur_13_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-blur_13_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-blur_13_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-blur 19<br><div class='img_holder'><div><img src='imgs/our_-blur_19_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-blur_19_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-blur_19_flower.png'><br>Diff 10X</div></div></div><br><H4>Sharpen</H4><div class='img_grp'>-sharpen<br><div class='img_holder'><div><img src='imgs/our_-sharpen_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-sharpen_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-sharpen_flower.png'><br>Diff 10X</div></div></div><br><H4>Edge Detect</H4><div class='img_grp'>-edgeDetect 12<br><div class='img_holder'><div><img src='imgs/our_-edgeDetect_12_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-edgeDetect_12_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-edgeDetect_12_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-edgeDetect 64<br><div class='img_holder'><div><img src='imgs/our_-edgeDetect_64_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-edgeDetect_64_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-edgeDetect_64_flower.png'><br>Diff 10X</div></div></div><div class='img_grp'>-edgeDetect 128<br><div class='img_holder'><div><img src='imgs/our_-
+edgeDetect_128_flower.png'><br>Ours</div></div><div class='img_holder'><div><img src='imgs/solution_-edgeDetect_128_flower.png'><br>Solution</div></div><div class='img_holder'><div><img src='imgs/diff10x_-edgeDetect_128_flower.png'><br>Diff 10X</div></div></div>                                                                             
+                                                                                          
+ <div class="caption" 
+><span class="id">Figure&#x00A0;3: </span><span  
+class="content">Image filtering. From top to the bottom are the results for blur, sharpen and edge detector filters. We show
+our results, the solution results and the amplified 10 times difference between them.</span></div><!--tex4ht:label?: x1-30013 -->
+                                                                                          
+                                                                                          
+   </div><hr class="endfloat" />
+   <h3 class="likesectionHead"><a 
+ id="x1-4000"></a>Part 4: Scale and Shift</h3>
+<!--l. 100--><p class="noindent" >We try three filters when scaling or shifting the images. The nearest neighbor filter simply picks out the nearest pixel in the
+original image and to reconstruct each pixel in the target image. The hat filter and Mitchell filter will do linear and cubic
+interpolation respectively to alleviate the aliasing and jaggies effect. The kernel function of the two filters are visualized in
+Figure <a 
+href="#x1-40034">4<!--tex4ht:ref: part4_kernel --></a>. One interesting observation is that for Mitchell filter, part of the kernel function will be negative, which
+means that when implementing the algorithm, we should be careful to make sure that all the value of pixels in the
+target image should be larger than zero. To better compare the difference between different methods, we use
+checkerboard image as the test example. The results for scale and shift are summarized in Figure <a 
+href="#x1-40195">5<!--tex4ht:ref: part4_scale --></a> and Figure <a 
+href="#x1-40296">6<!--tex4ht:ref: part4_shift --></a>
+respectively. We enlarge the images so that the details can be better observed. When dealing with image boundaries, we
+replicate the pixels at the boundaries so that we can obtain valid interpolation for every pixel in the target image.
+In the case of rescaling the images, we observe that hat filter and Mitchell filter has very similar performance,
+while nearest neighbor filter will yield distorted checkerboard. In the case of shifting the images, we find that
+if we shift the image with an integer value, all three methods will lead to the same results. When shifting the
+image with a real-value, however, we observe that nearest neighbor filter will lead to slight dis-alignment effect,
+while the results of using hat filter and the Mitchell filter are consistent with each other. (As shown in Figure
+<a 
+href="#x1-40296">6<!--tex4ht:ref: part4_shift --></a>)
+<!--l. 102--><p class="indent" >   <hr class="figure"><div class="figure" 
+>
+                                                                                          
+                                                                                          
+<a 
+ id="x1-40034"></a>
+                                                                                          
+                                                                                          
+<a 
+ id="x1-4001r1"></a>
+<div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/hatKernel.png" alt="PIC"  
+></td></tr></table></div> <a 
+ id="x1-4002r2"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/mitchellKernel.png" alt="PIC"  
+></td></tr></table></div>
+<br /> <div class="caption" 
+><span class="id">Figure&#x00A0;4: </span><span  
+class="content">From left to the right, the visualization of the kernel function of hat filter and Mitchell filter.</span></div><!--tex4ht:label?: x1-40034 -->
+                                                                                          
+                                                                                          
+<!--l. 108--><p class="indent" >   </div><hr class="endfigure">
+<!--l. 110--><p class="indent" >   <hr class="figure"><div class="figure" 
+>
+                                                                                          
+                                                                                          
+<a 
+ id="x1-40195"></a>
+                                                                                          
+<div class="img_grp">                                                                            
+<a 
+ id="x1-4004r1"></a>
+<div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_0_sx_256_sy_256.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(a)</span>
+<span 
+class="ptmr7t-x-x-80">Nearest</span>
+<span 
+class="cmr-8">256</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">256</span></div> </td></tr></table></div> <a 
+ id="x1-4005r2"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_0_sx_358_sy_358.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(b)</span>
+<span 
+class="ptmr7t-x-x-80">Nearest</span>
+<span 
+class="cmr-8">358</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">358</span></div> </td></tr></table></div> <a 
+ id="x1-4006r3"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_0_sx_460_sy_460.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(c)</span>
+<span 
+class="ptmr7t-x-x-80">Nearest</span>
+<span 
+class="cmr-8">460</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">460</span></div> </td></tr></table></div> <a 
+ id="x1-4007r4"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_0_sx_563_sy_563.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(d)</span>
+<span 
+class="ptmr7t-x-x-80">Nearest</span>
+<span 
+class="cmr-8">563</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">563</span></div> </td></tr></table></div> <a 
+ id="x1-4008r5"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_0_sx_665_sy_665.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(e)</span>
+<span 
+class="ptmr7t-x-x-80">Nearest</span>
+<span 
+class="cmr-8">665</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">665</span></div> </td></tr></table></div>
+</div> <div class="img_grp"> 
+<a 
+ id="x1-4009r6"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_1_sx_256_sy_256.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(f)</span>
+<span 
+class="ptmr7t-x-x-80">Hat</span>
+<span 
+class="cmr-8">256</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">256</span></div> </td></tr></table></div> <a 
+ id="x1-4010r7"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_1_sx_358_sy_358.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(g)</span>
+<span 
+class="ptmr7t-x-x-80">Hat</span>
+<span 
+class="cmr-8">358</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">358</span></div> </td></tr></table></div> <a 
+ id="x1-4011r8"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_1_sx_460_sy_460.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(h)</span>
+<span 
+class="ptmr7t-x-x-80">Hat</span>
+<span 
+class="cmr-8">460</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">460</span></div> </td></tr></table></div> <a 
+ id="x1-4012r9"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_1_sx_563_sy_563.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(i)</span>
+<span 
+class="ptmr7t-x-x-80">Hat</span>
+<span 
+class="cmr-8">563</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">563</span></div> </td></tr></table></div> <a 
+ id="x1-4013r10"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_1_sx_665_sy_665.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(j)</span>
+<span 
+class="ptmr7t-x-x-80">Hat</span>
+<span 
+class="cmr-8">665</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">665</span></div> </td></tr></table></div>
+</div> <div class="img_grp"> 
+<a 
+ id="x1-4014r11"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_2_sx_256_sy_256.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(k)</span>
+<span 
+class="ptmr7t-x-x-80">Mitchell</span>
+<span 
+class="cmr-8">256</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">256</span></div> </td></tr></table></div> <a 
+ id="x1-4015r12"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_2_sx_358_sy_358.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(l)</span>
+<span 
+class="ptmr7t-x-x-80">Mitchell</span>
+<span 
+class="cmr-8">358</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">358</span></div> </td></tr></table></div> <a 
+ id="x1-4016r13"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_2_sx_460_sy_460.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(m)</span>
+<span 
+class="ptmr7t-x-x-80">Mitchell</span>
+<span 
+class="cmr-8">460</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">460</span></div> </td></tr></table></div> <a 
+ id="x1-4017r14"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_2_sx_563_sy_563.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(n)</span>
+<span 
+class="ptmr7t-x-x-80">Mitchell</span>
+<span 
+class="cmr-8">563</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">563</span></div> </td></tr></table></div> <a 
+ id="x1-4018r15"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Scale_2_sx_665_sy_665.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(o)</span>
+<span 
+class="ptmr7t-x-x-80">Mitchell</span>
+<span 
+class="cmr-8">665</span><span 
+class="cmsy-8">&#x00D7;</span>
+<span 
+class="cmr-8">665</span></div> </td></tr></table></div></div>
+ <div class="caption" 
+><span class="id">Figure&#x00A0;5: </span><span  
+class="content">Scale the image using different filters. From top to the bottom are the images rescaled using nearest neighbor
+filter, hat filter and Mitchell filter. The sizes after scaling are shown below each row.</span></div><!--tex4ht:label?: x1-40195 -->
+                                                                                          
+                                                                                          
+<!--l. 129--><p class="indent" >   </div><hr class="endfigure">
+<!--l. 131--><p class="indent" >   <hr class="figure"><div class="figure" 
+>
+                                                                                          
+                                                                                          
+<a 
+ id="x1-40296"></a>
+                                                                                          
+         </div>                                                                               
+<a 
+ id="x1-4020r1"></a>
+<div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Shift_0_sx_-102_4_sy_-102_4.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(a)</span>
+<span 
+class="ptmr7t-x-x-80">Nearest</span>
+<span 
+class="ptmr7t-x-x-80">102.4</span></div></td></tr></table></div><a 
+ id="x1-4021r2"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Shift_0_sx_-51_2_sy_-51_2.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(b)</span>
+<span 
+class="ptmr7t-x-x-80">Nearest</span>
+<span 
+class="ptmr7t-x-x-80">51.2</span></div> </td></tr></table></div> <a 
+ id="x1-4022r3"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Shift_0_sx_-153_6_sy_-153_6.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(c)</span>
+<span 
+class="ptmr7t-x-x-80">Nearest</span>
+<span 
+class="ptmr7t-x-x-80">153.6</span></div> </td></tr></table></div>
+</div> <div class="img_grp"> 
+<a 
+ id="x1-4023r4"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Shift_1_sx_-102_4_sy_-102_4.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(d)</span>
+<span 
+class="ptmr7t-x-x-80">Hat</span>
+<span 
+class="ptmr7t-x-x-80">102.4</span></div> </td></tr></table></div><a 
+ id="x1-4024r5"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Shift_1_sx_-51_2_sy_-51_2.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(e)</span>
+<span 
+class="ptmr7t-x-x-80">Hat</span>
+<span 
+class="ptmr7t-x-x-80">51.2</span></div> </td></tr></table></div> <a 
+ id="x1-4025r6"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Shift_1_sx_-153_6_sy_-153_6.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(f)</span>
+<span 
+class="ptmr7t-x-x-80">Hat</span>
+<span 
+class="ptmr7t-x-x-80">153.6</span></div> </td></tr></table></div>
+</div> <div class="img_grp"> 
+<a 
+ id="x1-4026r7"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Shift_2_sx_-102_4_sy_-102_4.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(g)</span>
+<span 
+class="ptmr7t-x-x-80">Mitchell</span>
+<span 
+class="ptmr7t-x-x-80">102.4</span></div> </td></tr></table></div><a 
+ id="x1-4027r8"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Shift_2_sx_-51_2_sy_-51_2.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(h)</span>
+<span 
+class="ptmr7t-x-x-80">Mitchell</span>
+<span 
+class="ptmr7t-x-x-80">51.2</span></div> </td></tr></table></div> <a 
+ id="x1-4028r9"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part4/checkerboard_Shift_2_sx_-153_6_sy_-153_6.png" alt="PIC"  
+>
+<div class="subfigcaption"><span 
+class="ptmr7t-x-x-80">(i)</span>
+<span 
+class="ptmr7t-x-x-80">Mitchell</span>
+<span 
+class="ptmr7t-x-x-80">153.6</span></div> </td></tr></table></div></div>
+ <div class="caption" 
+><span class="id">Figure&#x00A0;6: </span><span  
+class="content">Shift the image using different filters. From top to the bottom are the images shifted using nearest neighbor
+filter, hat filter and Mitchell filter. The shift size are shown below each image. Comparing the checkerboards in each
+column, we can observe that the results of nearest neighbor filter has some tiny dis-alignment comparing with the
+results of hat filter and Mitchell filter.</span></div><!--tex4ht:label?: x1-40296 -->
+                                                                                          
+                                                                                          
+<!--l. 144--><p class="indent" >   </div><hr class="endfigure">
+   <h3 class="likesectionHead"><a 
+ id="x1-5000"></a>Part 5: Fun filter</h3>
+<!--l. 149--><p class="noindent" >For the fun filter, we made several transformations. First, we extracted vertical edges, increased the saturation and blur them.
+Also, we decrease red brightness and combined this buffer with darkened original image. And then we displace pixel locations
+by <span 
+class="cmr-10">sin</span><span 
+class="cmr-10">(</span><span 
+class="cmmi-10">x</span><span 
+class="cmr-10">) </span>function. See examples at Figure <a 
+href="#x1-50037">7<!--tex4ht:ref: part5_all --></a>. <hr class="figure"><div class="figure" 
+>
+                                                                                          
+                                                                                          
+<a 
+ id="x1-50037"></a>
+                                                                                          
+                                                                                          
+<a 
+ id="x1-5001r1"></a>
+<div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part5/out.png" alt="PIC"  
+></td></tr></table></div> <a 
+ id="x1-5002r2"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="part5/out2.png" alt="PIC"  
+></td></tr></table></div>
+<br /> <div class="caption" 
+><span class="id">Figure&#x00A0;7: </span><span  
+class="content">Examples of the fun filter.</span></div><!--tex4ht:label?: x1-50037 -->
+                                                                                          
+                                                                                          
+<!--l. 157--><p class="indent" >   </div><hr class="endfigure">
+    
+    <hr>
+    Download linux (Ubuntu 16.10) binary <a href="image">here</a>
+    <hr>
+</body></html> 
+
+                                                                                          
+
+
