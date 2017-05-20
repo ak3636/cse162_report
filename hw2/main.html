@@ -1,0 +1,222 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"  
+  "http://www.w3.org/TR/html4/loose.dtd">  
+<html > 
+<head><title>CSE 163: Project 2</title> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"> 
+<meta name="generator" content="TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/)"> 
+<meta name="originator" content="TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/)"> 
+<!-- html --> 
+<meta name="src" content="main.tex"> 
+<meta name="date" content="2017-05-19 20:47:00"> 
+<link rel="stylesheet" type="text/css" href="main.css"> 
+</head><body 
+>
+   <div class="maketitle">
+                                                                                          
+                                                                                          
+                                                                                          
+                                                                                          
+
+<h2 class="titleHead">CSE 163: Project 2</h2>
+ <div class="author" ><span 
+class="ptmr7t-x-x-120">Alexandr Kuznetsov     Zhengqin Li</span></div><br />
+<div class="date" ><span 
+class="ptmr7t-x-x-120">May 19, 2017</span></div>
+   </div>
+   <h3 class="sectionHead"><span class="titlemark">1    </span> <a 
+ id="x1-10001"></a>Mesh Viewer.</h3>
+<!--l. 25--><p class="noindent" >We implemented mesh viewer in OpenGL 1.2 and used GLFW library for handling window creation and GLM library for
+vectors and matrices. Using inverse of a rotation matrix, we are able to correctly rotate a model using a cursor. Also, we center
+the model for easer viewing.
+<!--l. 27--><p class="indent" >   Our viewer supports the drawing of the mesh on top of the model. This is achieved by drawing the model first in regular fill
+mode, then setting glPolygonOffset, and redrawing the mesh itself using line mode. The mesh can be disabled with <span 
+class="pcrr7t-">m </span>shortcut.
+By default, our viewer renders each angle of a triangle with a different color for debugging purposes. The viewer supports soft
+shaded mode, where the model is shaded by 3 light sources of different color. The mode is triggered by <span 
+class="pcrr7t-">l </span>shortcut. To
+achieve this, we calculate normal for each valid vertex by calculating weighted average of normals of neighboring
+faces.
+<!--l. 29--><p class="indent" >   Our viewer also supports displaying geomorph. This is done by setting progressive mesh to a higher edge count
+and then interpolating the vertex between the current position and position after several edge merges. This is
+done by using progressive mesh and following vertex merges until the right number of global edge merges have
+completed.
+<!--l. 32--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">2    </span> <a 
+ id="x1-20002"></a>Mesh Conectivity Data Structure</h3>
+<!--l. 33--><p class="noindent" >We represent a 3D mesh by its faces and vertices. For each triangle face, we restore the indexes of its three vertices in an <span 
+class="cmtt-10">array</span>.
+And for each vertex, we restore the indexes of all its adjacent faces in a <span 
+class="cmtt-10">set</span> so that we can look up the adjacent
+faces for each vertex efficiently. We believe this data structure balance the efficiency of updating the meshes and
+simplicity of implementation well: for every kind of operations, we only need to update or look up the 3D meshes
+locally. For example, when we merge two vertices, we only need to go through all the adjacent faces replace
+the corresponding vertices. When checking the validity of the faces, we only need to check whether the three
+vertices of the face are different. The connections are created once we read 3D Mesh from the <span 
+class="cmmi-10">.</span><span 
+class="cmtt-10">OFF</span> file and
+will be updated when we modify the meshes. The vertices and the triangle faces are restored in two vectors.
+Every time we remove a face or vertex from a 3D model we do not really remove them from the vector since the
+complexity of removing an element from the vector will be <span 
+class="cmsy-10"><img 
+src="cmsy10-4f.png" alt="O" class="10x-x-4f" /></span><span 
+class="cmr-10">(</span><span 
+class="cmmi-10">n</span><span 
+class="cmr-10">)</span>. Instead, for each vertex and triangle, we assign a
+boolean variable <span 
+class="cmtt-10">isValid</span>, which indicates whether the vertex or face has been removed from the 3D mesh or
+not.
+<!--l. 36--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">3    </span> <a 
+ id="x1-30003"></a>Mesh Decimation</h3>
+                                                                                          
+                                                                                          
+<!--l. 37--><p class="noindent" >To simplify the mesh, we merge the edges of the mesh one-by-one. We break the edge merging process into 4 operations and
+execute them sequentially. The 4 operations are: <span 
+class="cmtt-10">ADD</span>_<span 
+class="cmtt-10">VERTEX</span>, <span 
+class="cmtt-10">REPLACE</span>_<span 
+class="cmtt-10">VERTEX</span>, <span 
+class="cmtt-10">REMOVE</span>_<span 
+class="cmtt-10">FACE</span>, <span 
+class="cmtt-10">REMOVE</span>_<span 
+class="cmtt-10">VERTEX</span>. We will
+introduce the implementation of all 4 operations separately.
+<!--l. 39--><p class="noindent" ><span class="paragraphHead"><a 
+ id="x1-40003"></a><span 
+class="cmtt-10">ADD</span><span 
+class="ptmb7t-">_</span><span 
+class="cmtt-10">VERTEX</span><span 
+class="ptmb7t-">:</span></span>
+   In the first step, we add a new vertex to the vertices array. The position of the new vertex is computed by minimizing the
+quadratic error, which will be introduced in detail below.
+<!--l. 41--><p class="noindent" ><span class="paragraphHead"><a 
+ id="x1-50003"></a><span 
+class="cmtt-10">REPLACE</span><span 
+class="ptmb7t-">_</span><span 
+class="cmtt-10">VERTEX</span><span 
+class="ptmb7t-">:</span></span>
+   For the vertex being replaced, we go through all its adjacent faces and replace its index in face with the new vertex.
+<!--l. 43--><p class="noindent" ><span class="paragraphHead"><a 
+ id="x1-60003"></a><span 
+class="cmtt-10">REMOVE</span><span 
+class="ptmb7t-">_</span><span 
+class="cmtt-10">FACE</span><span 
+class="ptmb7t-">:</span></span>
+   Once we finish replacing the vertex, we check the validity of each face. If the 3 vertices of a face are different, we remove
+the face by marking it as not valid.
+<!--l. 45--><p class="noindent" ><span class="paragraphHead"><a 
+ id="x1-70003"></a><span 
+class="cmtt-10">REMOVE</span><span 
+class="ptmb7t-">_</span><span 
+class="cmtt-10">VERTEX</span><span 
+class="ptmb7t-">: </span></span>
+   When we merge an edge, some faces may become fin faces. To remove fin faces, we go through the vertices adjacent to the
+new vertex and see whether their number of adjacent vertices is less than 3. If a vertex has no more than 2 neighboring vertices,
+we say that the vertex must have only a single adjacent face which is a fin face. So we remove that vertex and its neighboring
+face. This process repeats recursively until there is no fin faces in the 3D mesh. Fig.<a 
+href="#x1-70031">1<!--tex4ht:ref: finFace --></a> shows an example in which the fin face has
+been successfully removed.
+<!--l. 47--><p class="indent" >   <hr class="figure"><div class="figure" 
+>
+                                                                                          
+                                                                                          
+<a 
+ id="x1-70031"></a>
+                                                                                          
+                                                                                          
+<a 
+ id="x1-7001r1"></a>
+<div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="1_0.png" alt="PIC"  
+> </td></tr></table></div> <a 
+ id="x1-7002r2"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="1_1.png" alt="PIC"  
+> </td></tr></table></div>
+<br /> <div class="caption" 
+><span class="id">Figure&#x00A0;1: </span><span  
+class="content">From left to the right, the left is the input 3D mesh. The right is the 3D mesh after merging vertex 0 and
+vertex 1. Once we merge vertices 0 and 1, vertex 13 will be a vertex of a fin face, which should be remove. The right
+figure show that We can not only merge the vertices but also successfully remove the fin face.</span></div><!--tex4ht:label?: x1-70031 -->
+                                                                                          
+                                                                                          
+<!--l. 53--><p class="indent" >   </div><hr class="endfigure">
+<!--l. 55--><p class="indent" >   <hr class="figure"><div class="figure" 
+>
+                                                                                          
+                                                                                          
+<a 
+ id="x1-70062"></a>
+                                                                                          
+                                                                                          
+<a 
+ id="x1-7004r1"></a>
+<div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="2_0.png" alt="PIC"  
+> </td></tr></table></div> <a 
+ id="x1-7005r2"></a><div class="subfigure"><table><tr><td style="text-align:left"><img 
+src="2_1.png" alt="PIC"  
+> </td></tr></table></div>
+<br /> <div class="caption" 
+><span class="id">Figure&#x00A0;2: </span><span  
+class="content">From left to the right, the left is the input 3D mesh. The right is the 3D mesh that after removing vertex 11
+and vertex 23.</span></div><!--tex4ht:label?: x1-70062 -->
+                                                                                          
+                                                                                          
+<!--l. 61--><p class="indent" >   </div><hr class="endfigure">
+<!--l. 63--><p class="indent" >   In order to verify the correctness of our method, we follow the instruction of the assignment and merge vertex 11 and vertex
+23 as required by the assignment. The results are shown in Fig.<a 
+href="#x1-70062">2<!--tex4ht:ref: plane --></a>.
+   <h3 class="sectionHead"><span class="titlemark">4    </span> <a 
+ id="x1-80004"></a>Quadric Simplification</h3>
+<!--l. 66--><p class="noindent" >For each triangle, we calculate the plane equation and corresponding quadric. On demand, we calculate quadric of a vertex by
+summing quadrics of neighboring faces. Quadric of an edge is the sum of quadrics of two vertices. If an edge shares only one
+face, we know its the boundary of the model, so we double the error for it. If quadratic is singular, we pick middle point of the
+edge instead of point that minimizes the error .
+<!--l. 68--><p class="indent" >   To keep track of the best edge to collapse, we created priority queue of edges sorted by quadric error. When
+we remove or replace a vertex or remove a face, we mark the vertices of changed faces and their neighboring
+vertices as dirty. When were finished with a given edge merge, we recalculate all dirty vertices and add them to the
+priority queue. We store minimal quadratic error of the edge formed by the vertex and a neighboring vertex in
+the vertex itself. When were getting the edge with smallest error from priority queue, we first need to validate
+the quadratic error with one from the vertex of the edge. If its not valid, we move to the next one. Also, we
+implemented a naive method of calculating smallest quadratic error of edges to validate our method. We use
+assert(), to check if our method is valid. assert() is optimized out during release build, so there is no performance
+penalty.
+<!--l. 72--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">5    </span> <a 
+ id="x1-90005"></a>Progressive Meshes</h3>
+<!--l. 73--><p class="noindent" >To perform progressive meshes, we create a vector to restore all the operations so we only need to compute the
+mesh simplification steps once. After that we can simplify and reconstruct the 3D meshes without doing extra
+computation.
+<!--l. 75--><p class="indent" >   When we collapse a triangle, we lose information because two vertices are map to the same place. Therefore, to avoid wrong
+order and negative normal, we store which vertex was replaced the last.
+<!--l. 77--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">6    </span> <a 
+ id="x1-100006"></a>Videos</h3>
+    
+    <video  controls>
+  <source src="teapot.mp4" type="video/mp4">
+</video>
+<br>
+<a href="teapot.mp4">Download Teapot video</a>
+<br>
+<hr>
+<video  controls>
+  <source src="cow.mp4" type="video/mp4">
+</video>
+<br>
+<a href="cow.mp4">Download Cow video</a>
+<br>
+<hr>
+<video  controls>
+  <source src="armadillo.mp4" type="video/mp4">
+</video>
+<br>
+<a href="armadillo.mp4">Download Armadillo video</a>
+<br>
+<hr>
+    
+</body></html> 
+
+                                                                                          
+
+
