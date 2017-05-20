@@ -47,15 +47,18 @@ completed.
 class="cmtt-10">array</span>.
 And for each vertex, we restore the indexes of all its adjacent faces in a <span 
 class="cmtt-10">set</span> so that we can look up the adjacent
-faces for each vertex efficiently. We believe this data structure balance the efficiency of updating the meshes and
+faces for each vertex efficiently. We believe this data structure balances the efficiency of updating the meshes and
 simplicity of implementation well: for every kind of operations, we only need to update or look up the 3D meshes
-locally. For example, when we merge two vertices, we only need to go through all the adjacent faces replace
+locally. For example, when we merge two vertices, we only need to go through all the adjacent faces to replace
 the corresponding vertices. When checking the validity of the faces, we only need to check whether the three
-vertices of the face are different. The connections are created once we read 3D Mesh from the <span 
+vertices of the face are different. The connections between faces and vertices are initialized when reading 3D Mesh from the <span 
 class="cmmi-10">.</span><span 
 class="cmtt-10">OFF</span> file and
-will be updated when we modify the meshes. The vertices and the triangle faces are restored in two vectors.
-Every time we remove a face or vertex from a 3D model we do not really remove them from the vector since the
+will be updated every we modify the meshes. When reading the <span 
+class="cmmi-10">.</span><span 
+class="cmtt-10">OFF</span> file, we first read the vertices and then the triangle faces. 
+The connections between faces and vertices are updated every time we read a new face. The vertices and the triangle faces are restored in two vectors.
+When we remove a face or vertex from a 3D model we do not really remove them from the vectors since the
 complexity of removing an element from the vector will be <span 
 class="cmsy-10"><img 
 src="cmsy10-4f.png" alt="O" class="10x-x-4f" /></span><span 
